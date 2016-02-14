@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from django import forms
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.http import Http404
@@ -66,6 +67,8 @@ class SingleObjectMixin(ContextMixin):
         if self.queryset is None:
             if self.model:
                 return self.model._default_manager.all()
+            elif hasattr(self, 'form_class') and issubclass(self.form_class, forms.ModelForm):
+                return self.form_class.Meta.model._default_manager.all()
             else:
                 raise ImproperlyConfigured(
                     "%(cls)s is missing a QuerySet. Define "
@@ -163,6 +166,12 @@ class SingleObjectTemplateResponseMixin(TemplateResponseMixin):
                 names.append("%s/%s%s.html" % (
                     self.model._meta.app_label,
                     self.model._meta.model_name,
+                    self.template_name_suffix
+                ))
+            elif hasattr(self, 'form_class') and issubclass(self.form_class, forms.ModelForm):
+                names.append("%s/%s%s.html" % (
+                    self.form_class.Meta.model._meta.app_label,
+                    self.form_class.Meta.model._meta.model_name,
                     self.template_name_suffix
                 ))
 
